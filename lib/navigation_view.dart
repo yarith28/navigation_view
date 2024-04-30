@@ -4,6 +4,8 @@ library navigation_view;
 import 'package:flutter/material.dart';
 import 'package:navigation_view/item_navigation_view.dart';
 
+import 'navigation_view_controller.dart';
+
 class NavigationView extends StatefulWidget{
   final Function(int) onChangePage;
   final Color? backgroundColor;
@@ -14,6 +16,9 @@ class NavigationView extends StatefulWidget{
   final Gradient? gradient;
   final Duration? durationAnimation;
   final List<ItemNavigationView> items;
+  final double? height;
+  final TextDirection? direction;
+  final NavigationViewController? controller;
    const NavigationView({Key? key,
 
 
@@ -26,6 +31,9 @@ class NavigationView extends StatefulWidget{
     this.color,
     this.curve,
     this.borderTopColor,
+    this.height,
+    this.direction,
+    this.controller,
 
 
   }) : super(key: key);
@@ -40,6 +48,7 @@ class _NavigationView extends State<NavigationView>{
 
   final double borderRadius = 11.1;
   late int _currentPage = 0;
+  late TextDirection direction;
 
 
   final Color color = Colors.blue;
@@ -48,6 +57,16 @@ class _NavigationView extends State<NavigationView>{
   void initState() {
      if(widget.durationAnimation != null) durationAnimation = widget.durationAnimation!;
     _currentPage =  0;
+    direction = widget.direction ?? TextDirection.rtl;
+    widget.controller?.addListener(() {
+      var index = widget.controller?.index;
+      if (index != null) {
+        assert(widget.items.length - 1 > index);
+        _currentPage = index;
+        widget.onChangePage(index);
+      }
+      setState(() {});
+    });
     super.initState();
   }
 
@@ -55,7 +74,7 @@ class _NavigationView extends State<NavigationView>{
 
   @override
   Widget build(BuildContext context) {
-    return Container(width: double.maxFinite,color: (widget.backgroundColor != null) ? widget.backgroundColor : Colors.white,height: 55,
+    return Container(width: double.maxFinite,color: (widget.backgroundColor != null) ? widget.backgroundColor : Colors.white,height: widget.height ?? 55,
         child: Column(
           children: [
             Container(width: double.maxFinite,height: 1,
@@ -67,7 +86,7 @@ class _NavigationView extends State<NavigationView>{
                   children: [
                     AnimatedPositioned(
                       curve: (widget.curve != null) ? widget.curve! : Curves.easeInOutQuint,
-                      left: (constraints.maxWidth / widget.items.length) * ((widget.items.length - 1) - _currentPage),
+                      left: (constraints.maxWidth / widget.items.length) * (direction == TextDirection.rtl ? ((widget.items.length - 1) - _currentPage) : _currentPage),
                       width:  constraints.maxWidth / widget.items.length,
                       height: constraints.maxHeight,
                       duration: Duration(milliseconds: durationAnimation.inMilliseconds),
@@ -130,7 +149,7 @@ class _NavigationView extends State<NavigationView>{
                       width: double.maxFinite,
                       height: double.maxFinite,
                       child: Row(
-                        textDirection: TextDirection.rtl,
+                        textDirection: direction,
                         children:widget.items.map((e) => Flexible(flex: 1,child: InkWell(
                           onTap: (){
 
